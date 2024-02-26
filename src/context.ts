@@ -14,6 +14,7 @@ interface IWizardContext extends Scenes.WizardSessionData {
  */
 interface IWizardSession extends Scenes.WizardSessionData {
 	// will be available under `ctx.scene.session.wizardSessionProp`
+	projectId: string;
 	wizardSessionProp: IWizardContext;
 }
 
@@ -26,9 +27,8 @@ interface IWizardSession extends Scenes.WizardSessionData {
  * We also have to set the wizard object under the `wizard` property.
  */
 export interface IContext extends Context {
-	// will be available under `ctx.projectId`
-	projectId: string;
-
+	// will be available under `ctx.id`
+	// id: string;
 	// declare scene type
 	scene: Scenes.SceneContextScene<IContext, IWizardSession>;
 	// declare wizard type

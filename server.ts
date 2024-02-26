@@ -17,7 +17,7 @@ const bot = new Telegraf<IContext>(process.env.BOT_TOKEN);
 // bot.on(message('text'), (ctx) => ctx.reply('👍'));
 useCommand(bot);
 useOn(bot);
-useWizard(bot);
+// useWizard(bot);
 bot.launch();
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
