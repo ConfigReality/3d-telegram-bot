@@ -2,9 +2,11 @@
   "name": "3d-telegram-bot",
   "version": "1.0.0",
   "description": "",
+  "module": "commonjs",
   "main": "index.js",
   "scripts": {
-    "dev": "node --inspect server.js",
+    "build": "tsc -w",
+    "start": "node --watch dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,6 +18,8 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/node": "^20.11.20",
+    "@types/uuid": "^9.0.8",
     "typescript": "^5.3.3"
   }
 }

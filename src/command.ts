@@ -1,6 +1,8 @@
-const { Markup, Telegraf } = require("telegraf")
+import { Context, Markup, Telegraf } from "telegraf";
 
-const useCommand = (bot) => {
+import { IContext } from "./context";
+
+export const useCommand = (bot: Telegraf<IContext>) => {
 
     bot.start((ctx) => ctx.reply('Welcome!'));
     bot.help((ctx) => ctx.reply('Send me a sticker'));
@@ -44,8 +46,4 @@ const useCommand = (bot) => {
         );
     })
 
-}
-
-module.exports = {
-    useCommand
 }

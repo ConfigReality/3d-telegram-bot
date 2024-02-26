@@ -1,8 +1,9 @@
 // create wizard to create a new project
 // 1. create a new project
 
-const { Scenes, session, Markup } = require("telegraf");
-const { v4 : uuidv4 } = require( 'uuid');
+import { Scenes, session, Markup, Telegraf, Context } from "telegraf";
+import { v4 as uuidv4 } from 'uuid';
+import { IContext } from "./context";
 
 // 2. "-d","medium", // -d specifies the detail
 const details = {
@@ -24,11 +25,12 @@ const features = {
     normal: 'normal',
     high: 'high',
 }
-const useWizard = (bot) => {
-    const wizard = new Scenes.WizardScene(
+export const useWizard = (bot: Telegraf<IContext>) => {
+    const wizard = new Scenes.WizardScene<IContext>(
         "wizard",
-        (ctx) => {
-            const id = uuidv4()
+        async (ctx) => {
+            const id: string = uuidv4()
+            ctx.projectId = id
             ctx.reply(`[${id}] Welcome to the project creation wizard. Please select the detail level of the project`, Markup.keyboard([
                 details.preview,
                 details.reduced,
@@ -39,7 +41,10 @@ const useWizard = (bot) => {
             return ctx.wizard.next()
         },
         async (ctx) => {
-            ctx.wizard.state.detail = ctx.message.text
+            // check if the user has selected a detail level)
+            // ctx.scene.session.wizardSessionProp.detail = ctx.message.text
+            debugger;
+
             await ctx.reply('Please select the sample ordering.', Markup.keyboard([
                 orders.unordered,
                 orders.sequential,
@@ -47,7 +52,8 @@ const useWizard = (bot) => {
             return ctx.wizard.next()
         },
         async (ctx) => {
-            ctx.wizard.state.order = ctx.message.text
+            
+            // ctx.scene.session.wizardSessionProp.order = ctx.message.text
             await ctx.reply('Please select the feature sensitivity.', Markup.keyboard([
                 features.normal,
                 features.high,
@@ -57,26 +63,25 @@ const useWizard = (bot) => {
         },
         async (ctx) => {
             // get photo from user
-            ctx.wizard.state.feature = ctx.message.text
+            // ctx.scene.session.wizardSessionProp.feature = ctx.message.text
             await ctx.reply('Please send a photo of the project.')
             return ctx.wizard.next()
         },
         async (ctx) => {
-
-            ctx.wizard.state.feature = ctx.message.text
-            await ctx.reply(`[${id}] Project created with the following settings:
-Detail:         ${ctx.wizard.state.detail}
-Order:          ${ctx.wizard.state.order}
-Feature:    ${ctx.wizard.state.feature}
+            // ctx.scene.session.wizardSessionProp.feature = ctx.message.text
+            await ctx.reply(`[${ctx.projectId}] Project created with the following settings:
+Detail:         ${ctx.scene.session.wizardSessionProp.detail}
+Order:          ${ctx.scene.session.wizardSessionProp.order}
+Feature:    ${ctx.scene.session.wizardSessionProp.feature}
             `)
 
-            console.log(ctx.wizard.state)
+            console.log(ctx.scene.session)
             
             return await ctx.scene.leave()  
         }
     );
     
-    const stage = new Scenes.Stage([wizard], {
+    const stage = new Scenes.Stage<IContext>([wizard], {
         ttl: 10,
     });
     bot.use(session());
@@ -85,6 +90,3 @@ Feature:    ${ctx.wizard.state.feature}
 
 }
 
-module.exports = {
-    useWizard
-}
