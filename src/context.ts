@@ -18,6 +18,11 @@ interface IWizardSession extends Scenes.WizardSessionData {
 	wizardSessionProp: IWizardContext;
 }
 
+interface SessionData {
+	// will be available under `ctx.session.userId`
+	userId: number;
+	id: string;
+}
 /**
  * We can define our own context object.
  *
@@ -27,11 +32,13 @@ interface IWizardSession extends Scenes.WizardSessionData {
  * We also have to set the wizard object under the `wizard` property.
  */
 export interface IContext extends Context {
+	session: SessionData;
 	// will be available under `ctx.id`
-	// id: string;
+	id: string;
+
 	// declare scene type
-	scene: Scenes.SceneContextScene<IContext, IWizardSession>;
+	// scene: Scenes.SceneContextScene<IContext, IWizardSession>;
 	// declare wizard type
-	wizard: Scenes.WizardContextWizard<IContext>;
+	// wizard: Scenes.WizardContextWizard<IContext>;
 }
 
