@@ -2,10 +2,8 @@ import { Telegraf, session } from 'telegraf';
 import { mkdir } from 'fs/promises';
 import { useCommand } from './src/command';
 import { useOn } from './src/on';
-// import { useWizard } from './src/wizard';
 import { IContext } from './src/context';
 import { useProcessing } from './src/lib/process';
-import { useDb } from './src/lib/db';
 
 require('dotenv').config();
 
@@ -16,22 +14,14 @@ if (process.env.BOT_TOKEN === undefined) {
 }
 
 const bot = new Telegraf<IContext>(process.env.BOT_TOKEN);
-
-// bot.on(message('text'), (ctx) => ctx.reply('👍'));
-
-bot.use(session({defaultSession: () => ({id: '', processing: false})}));
-
-// useDb().then((instance) => {;
+const newDateString = new Date().toISOString();
+bot.use(session({defaultSession: () => ({id: '', processing: false, lastIteraction: newDateString})}));
 
 useCommand(bot);
 useOn(bot);
-useProcessing(bot); //, instance);
+useProcessing(bot);
 
-// useWizard(bot);
-
-bot.launch();
-
-// }).catch(console.error);
+bot.launch().then(console.log).catch(console.error);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

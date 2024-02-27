@@ -1,4 +1,5 @@
 import { Context, Scenes, Telegram } from "telegraf";
+import { I18nProp } from "./i18n";
 // import { Update, UserFromGetMe } from "telegraf/typings/core/types/typegram";
 
 // interface IWizardContext extends Scenes.WizardSessionData {
@@ -23,6 +24,7 @@ interface SessionData {
 	// userId: number;
 	id: string;
 	processing: boolean;
+	lastIteraction: string;
 }
 /**
  * We can define our own context object.
@@ -35,7 +37,7 @@ interface SessionData {
 export interface IContext extends Context {
 	session: SessionData;
 	// will be available under `ctx.id`
-	// id: string;
+	i18n: I18nProp;
 
 	// declare scene type
 	// scene: Scenes.SceneContextScene<IContext, IWizardSession>;

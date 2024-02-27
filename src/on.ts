@@ -32,7 +32,7 @@ export const useOn = (bot: Telegraf<IContext>) => {
         const { file_id } = ctx.message.photo.pop() as PhotoSize;
 
         const id = ctx.session.id;
-        console.log
+        ctx.session.lastIteraction = new Date().toISOString();
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_id}.jpg`);
         try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
@@ -47,7 +47,7 @@ export const useOn = (bot: Telegraf<IContext>) => {
             return
         }
         const { file_id, file_name } = ctx.message.document;
-
+        ctx.session.lastIteraction = new Date().toISOString();
         const id = ctx.session.id;
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_name}`);

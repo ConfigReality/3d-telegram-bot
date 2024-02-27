@@ -10,6 +10,9 @@ const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
 const outDir = `${dir}/photos`
 const libDir = `${dir}/src/lib`
 
+
+// const INACTICITY_TIMEOUT = 10 * 1000;
+
 function promiseFromChildProcess(child: ChildProcess) {
     return new Promise(function (resolve, reject) {
         child.addListener("error", reject);
@@ -25,11 +28,12 @@ const queue = fastq.promise(async (ctx: IContext) => {
         console.error
     ));
     ctx.reply(
-        `Modello pronto! 
+`Modello pronto! 
 ${ctx.session.id}`
     );
-    ctx.sendDocument(`${outDir}/${id}/models/${id}.usdz`);
+    ctx.sendDocument({source: `${outDir}/${id}/${id}.usdz`});
     ctx.session.id = "";
+    ctx.session.processing = false;
 }, 1);
 
 export const useProcessing = (bot: Telegraf<IContext>) => {
@@ -50,24 +54,41 @@ Premere /cancel per annullare il processo.`
         }
         
         await ctx.reply(
-            `Step 1 
-            Iniziamo! Invia le foto e attedi l'upload.
-            
-            Al termine basterà eseguire il comando /processing per avviare il processo di elaborazione.
-            
-            Attendi il messaggio di conferma.
-            
-            NOTA BENE: Attendi il caricamento di tutte le foto prima di inviare /processing.
-            
-            Premi /cancel per annullare il processo.`
+            ` 
+Iniziamo! Invia le foto e attedi l'upload.
+
+Al termine basterà eseguire il comando /processing per avviare il processo di elaborazione.
+
+Attendi il messaggio di conferma.
+
+NOTA BENE: Attendi il caricamento di tutte le foto prima di inviare /processing.
+
+Premi /cancel per annullare il processo.`
             );
             
         ctx.session.id = uuidv4();
         await ctx.reply(`Incolla le foto da processare.`);
+        // setTimeout(async () => {
+        //     const current = new Date().toISOString();
+        //     const last = ctx.session.lastIteraction;
+        //     const diff = new Date(current).getTime() - new Date(last).getTime();
+        //     console.log({ current, last, diff })
+        //     if (diff > INACTICITY_TIMEOUT) {
+        //         ctx.session.id = "";
+        //         ctx.session.processing = false;
+        //         await ctx.reply("Timeout. Nessuna foto ricevuta.");
+        //         await ctx.reply("/cancel")
+        //     } else if (ctx.session.id && ctx.session.processing === false) {
+        //         ctx.session.id = "";
+        //         ctx.session.processing = false;
+        //         await ctx.reply("Timeout. Nessuna foto ricevuta.");
+        //         await ctx.reply("/cancel")
+        //     }
+        // }, INACTICITY_TIMEOUT);
     });
 
     bot.command("cancel", async (ctx) => {
-        if (!ctx.session.processing) {
+        if (!ctx.session.processing && !ctx.session.id) {
             await ctx.reply("Nessun processo in corso.");
             return
         }
@@ -87,7 +108,7 @@ Premere /cancel per annullare il processo.`
         }
         // creo un id univoco per la sessione
         await ctx.reply(
-`Step 2
+`
 [${ctx.session.id}] Processing...
 Attendi qualche minuto. 
 Ti invierò il modello 3D appena pronto.`
