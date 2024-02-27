@@ -1,27 +1,28 @@
 import { Context, Scenes, Telegram } from "telegraf";
-import { Update, UserFromGetMe } from "telegraf/typings/core/types/typegram";
+// import { Update, UserFromGetMe } from "telegraf/typings/core/types/typegram";
 
-interface IWizardContext extends Scenes.WizardSessionData {
-    detail: string;
-    order: string;
-    feature: string;
-}
+// interface IWizardContext extends Scenes.WizardSessionData {
+//     detail: string;
+//     order: string;
+//     feature: string;
+// }
 
 /**
  * It is possible to extend the session object that is available to each wizard.
  * This can be done by extending `WizardSessionData` and in turn passing your
  * own interface as a type variable to `WizardContextWizard`.
  */
-interface IWizardSession extends Scenes.WizardSessionData {
-	// will be available under `ctx.scene.session.wizardSessionProp`
-	projectId: string;
-	wizardSessionProp: IWizardContext;
-}
+// interface IWizardSession extends Scenes.WizardSessionData {
+// 	// will be available under `ctx.scene.session.wizardSessionProp`
+// 	projectId: string;
+// 	wizardSessionProp: IWizardContext;
+// }
 
 interface SessionData {
 	// will be available under `ctx.session.userId`
-	userId: number;
+	// userId: number;
 	id: string;
+	processing: boolean;
 }
 /**
  * We can define our own context object.
@@ -34,7 +35,7 @@ interface SessionData {
 export interface IContext extends Context {
 	session: SessionData;
 	// will be available under `ctx.id`
-	id: string;
+	// id: string;
 
 	// declare scene type
 	// scene: Scenes.SceneContextScene<IContext, IWizardSession>;

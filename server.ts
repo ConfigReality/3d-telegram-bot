@@ -16,15 +16,22 @@ if (process.env.BOT_TOKEN === undefined) {
 }
 
 const bot = new Telegraf<IContext>(process.env.BOT_TOKEN);
-// bot.on(message('text'), (ctx) => ctx.reply('👍'));
-useCommand(bot);
-useDb().then((instance) => {;
-	useOn(bot);
-	useProcessing(bot, instance);
-	// useWizard(bot);
-	bot.use(session());
-	bot.launch();
 
-	process.once('SIGINT', () => bot.stop('SIGINT'));
-	process.once('SIGTERM', () => bot.stop('SIGTERM'));
-}).catch(console.error);
+// bot.on(message('text'), (ctx) => ctx.reply('👍'));
+
+bot.use(session({defaultSession: () => ({id: '', processing: false})}));
+
+// useDb().then((instance) => {;
+
+useCommand(bot);
+useOn(bot);
+useProcessing(bot); //, instance);
+
+// useWizard(bot);
+
+bot.launch();
+
+// }).catch(console.error);
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));

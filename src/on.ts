@@ -4,7 +4,9 @@ import { createWriteStream } from "node:fs";
 import { Writable } from "node:stream";
 import { Telegraf } from "telegraf";
 import { PhotoSize, Update } from "telegraf/typings/core/types/typegram";
+import { mkdir } from "fs/promises";
 import { IContext } from "./context";
+import { join } from 'path';
 
 export const useOn = (bot: Telegraf<IContext>) => {
     bot.hears('hi', (ctx) => {
@@ -17,27 +19,42 @@ export const useOn = (bot: Telegraf<IContext>) => {
 
     const download = async (fromFileId: string, toPath: string) => {
         const link = await bot.telegram.getFileLink(fromFileId);
-        console.log('[download]',link.toString());
+        console.log('[download]', link.toString());
         const res = await fetch(link.toString());
         await res.body?.pipeTo(Writable.toWeb(createWriteStream(toPath)));
     };
 
     bot.on(message("photo"), async ctx => {
-        console.log('[message("photo")] - context',ctx)
-        const { file_id } = ctx.message.photo.pop() as PhotoSize ;
-        const path = `./photos/${file_id}.jpg`;
-        await download(file_id, path);
-        console.log("Downloaded", path);
+        if (ctx.session.id === '') {
+            ctx.reply('Inizia un nuovo processo con /init');
+            return
+        }
+        const { file_id } = ctx.message.photo.pop() as PhotoSize;
+
+        const id = ctx.session.id;
+        console.log
+        const dirPath = `./photos/${id}`;
+        const _path = join(dirPath, `${file_id}.jpg`);
+        try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
+        await download(file_id, _path)
+
+        console.log("Downloaded", _path);
     });
 
     bot.on(message("document"), async ctx => {
-        console.log('[message("document")] - context', ctx)
+        if (ctx.session.id === '') {
+            ctx.reply('Inizia un nuovo processo con /init');
+            return
+        }
         const { file_id, file_name } = ctx.message.document;
-        const path = `./photos/${file_name}`;
 
-        await download(file_id, path);
+        const id = ctx.session.id;
+        const dirPath = `./photos/${id}`;
+        const _path = join(dirPath, `${file_name}`);
+        try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
+        await download(file_id, _path);
 
-        console.log("Downloaded", path);
+        console.log("Downloaded", _path);
     });
 
 }

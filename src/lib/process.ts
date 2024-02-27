@@ -1,59 +1,98 @@
 import { Telegraf } from "telegraf";
 import { IContext } from "../context";
-import { exec } from "child_process";
-import { mkdir } from "fs/promises";
-import {join} from 'path'
-import { Client } from "pg";
+import { ChildProcess, exec } from "child_process";
+import { join } from 'path'
+import fastq from "fastq";
+
+import { v4 as uuidv4 } from "uuid";
 
 const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
-const outDir = `${dir}/tmp`
+const outDir = `${dir}/photos`
 const libDir = `${dir}/src/lib`
 
-export const useProcessing = (bot: Telegraf<IContext>, instance: Client) => {
+function promiseFromChildProcess(child: ChildProcess) {
+    return new Promise(function (resolve, reject) {
+        child.addListener("error", reject);
+        child.addListener("exit", resolve);
+    });
+}
+
+const queue = fastq.promise(async (ctx: IContext) => {
+    // await new Promise((resolve) => setTimeout(resolve, 10000));
+    const id = ctx.session.id;
+    await promiseFromChildProcess(exec(
+        `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/ ${outDir}/${id}/${id}.usdz`,
+        console.error
+    ));
+    ctx.reply(
+        `Modello pronto! 
+${ctx.session.id}`
+    );
+    ctx.sendDocument(`${outDir}/${id}/models/${id}.usdz`);
+    ctx.session.id = "";
+}, 1);
+
+export const useProcessing = (bot: Telegraf<IContext>) => {
+    const _exit = (id: string) => `Processo ${id} già in corso.
+Premere /cancel per annullare il processo.`
+
     bot.command("list", async (ctx) => {
-        // const id = ctx.from.id;
-        // const res = await instance.query(
-        //     "SELECT * FROM models WHERE user_id = $1",
-        //     [id]
-        // );
-        // await ctx.reply(
-        //     res.rows.map((row) => row.id).join("\n") || "No models found."
-        // );
+        const resume = queue.resume()
+        const length = queue.length()
+        console.log(resume, length)
+        await ctx.reply(JSON.stringify({ resume, length }, null, 2));
     });
 
-    bot.command("process", async (ctx) => {
-        await ctx.reply(`[${ctx.from.id}]Incolla le foto da processare.`);
-        // const res = await instance.query(
-        //     "INSERT INTO models (user_id) VALUES ($1) RETURNING id",
-        //     [ctx.from.id]
-        // );
+    bot.command("init", async (ctx) => {
+        if (ctx.session.id) {
+            await ctx.reply(_exit(ctx.session.id));
+            return
+        }
         
-        // const id = res.rows[0].id;
-
-        await mkdir(`${outDir}/${ctx.from.id}/images`, { recursive: true });
-        await mkdir(`${outDir}/${ctx.from.id}/models`, { recursive: true });
-        
-        await ctx.replyWithMarkdownV2(`Per terminare il processo, invia /done.
-Il processo potrebbe richiedere diversi minuti. 
-Attendi il messaggio di conferma.
-
-**NOTA BENE**: Attendi il caricamento di tutte le foto prima di inviare /done.`);
+        await ctx.reply(
+            `Step 1 
+            Iniziamo! Invia le foto e attedi l'upload.
+            
+            Al termine basterà eseguire il comando /processing per avviare il processo di elaborazione.
+            
+            Attendi il messaggio di conferma.
+            
+            NOTA BENE: Attendi il caricamento di tutte le foto prima di inviare /processing.
+            
+            Premi /cancel per annullare il processo.`
+            );
+            
+        ctx.session.id = uuidv4();
+        await ctx.reply(`Incolla le foto da processare.`);
     });
 
-    bot.command("done", async (ctx) => {
-        const id = ctx.from.id;
-        await ctx.reply(`[${id}] Processing...
+    bot.command("cancel", async (ctx) => {
+        if (!ctx.session.processing) {
+            await ctx.reply("Nessun processo in corso.");
+            return
+        }
+        await ctx.reply(`Processo annullato., ${ctx.session.id}`);
+        ctx.session.id = "";
+        ctx.session.processing = false;
+    });
+
+    bot.command("processing", async (ctx) => {
+        if (!ctx.session.id) {
+            await ctx.reply(`Per iniziare un nuovo processo, invia /init.`);
+            return
+        }
+        if (ctx.session.processing) {
+            await ctx.reply(_exit(ctx.session.id));
+            return
+        }
+        // creo un id univoco per la sessione
+        await ctx.reply(
+`Step 2
+[${ctx.session.id}] Processing...
 Attendi qualche minuto. 
-Ti invierò il modello 3D appena pronto.`);
-        // move images to processing folder
-        const destFOlder = `${dir}/photos/`
-        const outFOlder = `${outDir}/${ctx.from.id}/images/`
-        
-        exec(`mv ${destFOlder}*.jpg ${outFOlder}`, console.error)
+Ti invierò il modello 3D appena pronto.`
+        );
 
-        exec(
-            `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/images/ ${outDir}/${id}/models/${id}.usdz`,
-            console.error
-          )
+        queue.push(ctx);
     });
 };
