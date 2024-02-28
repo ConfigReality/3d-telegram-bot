@@ -1,12 +1,11 @@
-import { Context, Scenes, Telegram } from "telegraf";
+import { Context, Scenes } from "telegraf";
 import { I18nProp } from "./i18n";
-// import { Update, UserFromGetMe } from "telegraf/typings/core/types/typegram";
+import { SessionContext } from "telegraf/typings/session";
+import { SceneContextScene, WizardSession, WizardSessionData } from "telegraf/typings/scenes";
 
-// interface IWizardContext extends Scenes.WizardSessionData {
-//     detail: string;
-//     order: string;
-//     feature: string;
-// }
+type DetailType = "preview" | "reduced" | "medium" | "full" | "raw";
+type OrderType = "unordered" | "sequential";
+type FeatureType = "normal" | "high";
 
 /**
  * It is possible to extend the session object that is available to each wizard.
@@ -18,30 +17,44 @@ import { I18nProp } from "./i18n";
 // 	projectId: string;
 // 	wizardSessionProp: IWizardContext;
 // }
+// interface IWizardSession extends Scenes.WizardSessionData {
+interface ProcessConfigProps {
+	// will be available under `ctx.scene.session.myWizardSessionProp`
+	detail: string;
+	detailMessage: number;
+	order: string;
+	orderMessage: number;
+	feature: string;
+	featureMessage: number;
+	completeMessage: number;
+	abortedMessage: number;
+	defaultMessage: number;
+	// isComplete: boolean;
+}
 
-interface SessionData {
+interface SessionData extends Scenes.WizardSession {
 	// will be available under `ctx.session.userId`
 	// userId: number;
 	id: string;
 	processing: boolean;
+	processConfig: ProcessConfigProps;
 	lastIteraction: string;
 }
-/**
- * We can define our own context object.
- *
- * We now have to set the scene object under the `scene` property. As we extend
- * the scene session, we need to pass the type in as a type variable.
- *
- * We also have to set the wizard object under the `wizard` property.
- */
+// interface IWizardContext extends IContext {
+// 	detail: string;
+// 	order: string;
+// 	feature: string;
+// }
+
+
+
 export interface IContext extends Context {
 	session: SessionData;
 	// will be available under `ctx.id`
 	i18n: I18nProp;
-
 	// declare scene type
-	// scene: Scenes.SceneContextScene<IContext, IWizardSession>;
+	scene: Scenes.SceneContextScene<IContext, Scenes.WizardSessionData>;
 	// declare wizard type
-	// wizard: Scenes.WizardContextWizard<IContext>;
+	wizard: Scenes.WizardContextWizard<IContext>;
 }
 

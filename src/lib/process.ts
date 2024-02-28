@@ -1,10 +1,11 @@
 import { Telegraf } from "telegraf";
 import { IContext } from "../context";
-import { ChildProcess, exec } from "child_process";
+import { ChildProcess, ExecException, exec } from "child_process";
 import { join } from 'path'
 import fastq from "fastq";
 
 import { v4 as uuidv4 } from "uuid";
+import { existsSync } from "fs";
 
 const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
 const outDir = `${dir}/photos`
@@ -23,15 +24,29 @@ function promiseFromChildProcess(child: ChildProcess) {
 const queue = fastq.promise(async (ctx: IContext) => {
     // await new Promise((resolve) => setTimeout(resolve, 10000));
     const id = ctx.session.id;
+    const source = `${outDir}/${id}/${id}.usdz`;
     await promiseFromChildProcess(exec(
-        `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/ ${outDir}/${id}/${id}.usdz`,
-        console.error
+        `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/ ${source}`,
+        (error: ExecException | null, stdout: string, stderr: string) => {
+            if (error) {
+                ctx.reply(`Errore durante l'elaborazione del modello. ${error.message}`)
+                return;
+            }
+            
+            console.log(`stdout: ${stdout}`);
+            console.error(`stderr: ${stderr}`);
+        }
     ));
     ctx.reply(
 `Modello pronto! 
 ${ctx.session.id}`
     );
-    ctx.sendDocument({source: `${outDir}/${id}/${id}.usdz`});
+    // check if file exists
+    if(!existsSync(source)) {
+        ctx.reply(`Errore durante l'elaborazione del modello. File non trovato.`);
+        return;
+    }
+    ctx.sendDocument({source});
     ctx.session.id = "";
     ctx.session.processing = false;
 }, 1);
@@ -106,7 +121,7 @@ Premi /cancel per annullare il processo.`
             await ctx.reply(_exit(ctx.session.id));
             return
         }
-        // creo un id univoco per la sessione
+
         await ctx.reply(
 `
 [${ctx.session.id}] Processing...
@@ -114,6 +129,33 @@ Attendi qualche minuto.
 Ti invierò il modello 3D appena pronto.`
         );
 
+        queue.push(ctx);
+    });
+
+    // bot.command('config', async (ctx) => {
+    //     const { detail, order, feature } = ctx.session.processConfig;
+
+    //     const _detail = await ctx.reply('Seleziona il dettaglio', Markup.keyboard(['preview'  ,'reduced'  ,'medium'  ,'full'  ,'raw']).oneTime().resize());
+    //     const _order = await ctx.reply('Seleziona l\'ordine', Markup.keyboard(['unordered','sequential']).oneTime().resize());
+    //     const _feature = await ctx.reply('Seleziona la feature', Markup.keyboard(['normal','high']).oneTime().resize());
+
+    //     console.log({ _detail, _order, _feature })
+    // });
+
+    bot.command('reprocessing', async (ctx) => {
+        const {text} = ctx.message;
+        const [_, id] = text.split(' ');
+        if(!id) {
+            await ctx.reply(`
+Inserisci l'id del processo da riprovare. 
+
+Esempio: /reprocessing 123e4567-e89b-12d3-a456-426614174000`
+            );
+            return
+        }
+        ctx.session.id = id;
+        ctx.session.processing = false;
+        await ctx.reply(`Riprovo il processo ${id}`);
         queue.push(ctx);
     });
 };

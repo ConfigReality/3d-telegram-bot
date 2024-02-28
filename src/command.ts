@@ -11,6 +11,13 @@ export const useCommand = (bot: Telegraf<IContext>) => {
         ctx.reply(`${JSON.stringify({ ...ctx.from, ...ctx.chat }, null, 2)}`);
     })
 
+    bot.command('chat', (ctx) => {
+        ctx.reply(`${JSON.stringify({ ...ctx.chat }, null, 2)}`);
+    })
+    bot.command('message', (ctx) => {
+        ctx.reply(`${JSON.stringify({ ...ctx.message }, null, 2)}`);
+    })
+
     bot.command('quit', async (ctx) => {
         // Explicit usage
         await ctx.telegram.leaveChat(ctx.message.chat.id)

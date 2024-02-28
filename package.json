@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc -w",
     "start": "node --watch dist/server.js",
+    "dev": "node --watch --inspect dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
