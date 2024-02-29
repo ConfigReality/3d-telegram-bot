@@ -7,10 +7,11 @@ import { useProcessing } from './src/lib/process';
 import { useActions } from './src/actions';
 import { useWizard } from './src/wizard';
 import { useConfig } from './src/config';
+import { useDb } from './src/lib/db';
 
 require('dotenv').config();
 
-mkdir("./photos", { recursive: true }).then(console.log).catch(console.error);
+mkdir("./photos", { recursive: true }).catch(console.error);
 
 if (process.env.BOT_TOKEN === undefined) {
 	throw new TypeError("BOT_TOKEN must be provided!");
@@ -20,8 +21,8 @@ const bot = new Telegraf<IContext>(process.env.BOT_TOKEN);
 const newDateString = new Date().toISOString();
 bot.use(session({
 	defaultSession: () => ({
-		id: '', 
-		processing: false, 
+		id: '',
+		processing: false,
 		lastIteraction: newDateString,
 		processConfig: {
 			detail: "",
@@ -37,15 +38,36 @@ bot.use(session({
 		}
 	})
 }));
-useCommand(bot);
-useOn(bot);
-// processing
-useProcessing(bot);
-// config
-// useWizard(bot);
-useConfig(bot);
 
-bot.launch().then(console.log).catch(console.error);
+const init = async () => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const db = await useDb();
+			useCommand(bot, db);
+			useOn(bot, db);
+			// processing
+			useProcessing(bot, db);
+			// config
+			// useWizard(bot);
+			useConfig(bot);
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+			bot.launch().then(console.log).catch(console.error);
+
+			process.once('SIGINT', () => {
+				bot.stop('SIGINT');
+				db.end();
+			});
+
+			process.once('SIGTERM', () => {
+				bot.stop('SIGTERM');
+				db.end();
+			});
+			resolve('Bot started');
+
+		} catch (error) {
+			reject(error);
+		}
+	});
+}
+
+init().then(console.log).catch(console.error);

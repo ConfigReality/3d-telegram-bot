@@ -6,6 +6,7 @@ import fastq from "fastq";
 
 import { v4 as uuidv4 } from "uuid";
 import { existsSync } from "fs";
+import { Client } from "pg";
 
 const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
 const outDir = `${dir}/photos`
@@ -51,7 +52,7 @@ ${ctx.session.id}`
     ctx.session.processing = false;
 }, 1);
 
-export const useProcessing = (bot: Telegraf<IContext>) => {
+export const useProcessing = (bot: Telegraf<IContext>, db: Client) => {
     const _exit = (id: string) => `Processo ${id} già in corso.
 Premere /cancel per annullare il processo.`
 
@@ -82,24 +83,12 @@ Premi /cancel per annullare il processo.`
             );
             
         ctx.session.id = uuidv4();
+
+        const insertModel = await db.query('INSERT INTO models (model_id, user_id) VALUES ($1, $2)', [ctx.session.id, ctx.from.id]);
+        if(insertModel.rowCount === 0) {
+            await ctx.reply('Errore durante l\'inserimento del modello');
+        }
         await ctx.reply(`Incolla le foto da processare.`);
-        // setTimeout(async () => {
-        //     const current = new Date().toISOString();
-        //     const last = ctx.session.lastIteraction;
-        //     const diff = new Date(current).getTime() - new Date(last).getTime();
-        //     console.log({ current, last, diff })
-        //     if (diff > INACTICITY_TIMEOUT) {
-        //         ctx.session.id = "";
-        //         ctx.session.processing = false;
-        //         await ctx.reply("Timeout. Nessuna foto ricevuta.");
-        //         await ctx.reply("/cancel")
-        //     } else if (ctx.session.id && ctx.session.processing === false) {
-        //         ctx.session.id = "";
-        //         ctx.session.processing = false;
-        //         await ctx.reply("Timeout. Nessuna foto ricevuta.");
-        //         await ctx.reply("/cancel")
-        //     }
-        // }, INACTICITY_TIMEOUT);
     });
 
     bot.command("cancel", async (ctx) => {
