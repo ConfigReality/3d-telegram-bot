@@ -4,11 +4,11 @@ import { IContext } from "./context";
 export const useActions = () => {
     const _currentConfig = async (ctx: IContext) => {
         await ctx.reply(`
-Configurazione Attuale:
-Dettaglio: ${ctx.session.processConfig.detail || 'default'}
-Ordine: ${ctx.session.processConfig.order || 'default'}
-Feature: ${ctx.session.processConfig.feature || 'default'}
-        `,
+<b>Configurazione Attuale</b>
+Dettaglio:\n\t\t\t\t<i>${ctx.session.processConfig.detail || 'default'}</i>
+Ordine:\n\t\t\t\t<i>${ctx.session.processConfig.order || 'default'}</i>
+Feature:\n\t\t\t\t<i>${ctx.session.processConfig.feature || 'default'}</i>
+        `, { parse_mode: 'HTML'}
                 );
     }
 
@@ -64,34 +64,42 @@ Feature: ${ctx.session.processConfig.feature || 'default'}
         // ctx.session.processConfig.isComplete = true;
         // return ctx.scene.leave(); // uncomment if use wizard
     });
+    const _reactOkMessage = async (ctx: IContext) => {
+        await ctx.react('👍');;
+    }
     // detail
     stepHandler.action("🧐 preview", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.detail = 'preview'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("🧐 reduced", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.detail = 'reduced'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("🧐 medium", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.detail = 'medium'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("🧐 full", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.detail = 'full'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("🧐 raw", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.detail = 'raw'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
@@ -99,12 +107,14 @@ Feature: ${ctx.session.processConfig.feature || 'default'}
     stepHandler.action("👔 unordered", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.order = 'unordered'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("👔 sequential", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.order = 'sequential'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
@@ -112,12 +122,14 @@ Feature: ${ctx.session.processConfig.feature || 'default'}
     stepHandler.action("💎 normal", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.feature = 'normal'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })
     stepHandler.action("💎 high", async (ctx) => {
         // if(ctx.session.processConfig.completeMessage) return;
         ctx.session.processConfig.feature = 'high'
+        _reactOkMessage(ctx)
         // await ctx.deleteMessage();
         // return ctx.wizard.next(); // uncomment if use wizard
     })

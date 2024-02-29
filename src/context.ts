@@ -21,10 +21,10 @@ type FeatureType = "normal" | "high";
 interface ProcessConfigProps {
 	// will be available under `ctx.scene.session.myWizardSessionProp`
 	detail: string;
-	detailMessage: number;
 	order: string;
-	orderMessage: number;
 	feature: string;
+	detailMessage: number;
+	orderMessage: number;
 	featureMessage: number;
 	completeMessage: number;
 	abortedMessage: number;
@@ -45,8 +45,6 @@ interface SessionData extends Scenes.WizardSession {
 // 	order: string;
 // 	feature: string;
 // }
-
-
 
 export interface IContext extends Context {
 	session: SessionData;
