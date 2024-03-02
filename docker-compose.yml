@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    container_name: 3d-telegram-bot
+    restart: always
+    environment: 
+      - BOT_TOKEN=${BOT_TOKEN}
+      - PG_CONNECTION_STRING=${PG_CONNECTION_STRING}
+      - QUEUE_CONNECTION_STRING=${QUEUE_CONNECTION_STRING}
+    command: npm start

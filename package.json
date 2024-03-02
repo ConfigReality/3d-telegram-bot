@@ -5,7 +5,8 @@
   "module": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -w",
+    "build": "tsc",
+    "build:watch": "tsc -w",
     "start": "node --watch dist/server.js",
     "dev": "node --watch --inspect dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
