@@ -85,6 +85,7 @@ Premi /cancel per annullare il processo.`
             );
             
         ctx.session.id = uuidv4();
+        ctx.session.processing = true;
 
         const insertModel = await db.query('INSERT INTO models (model_id, user_id) VALUES ($1, $2)', [ctx.session.id, ctx.from.id]);
         if(insertModel.rowCount === 0) {
@@ -145,7 +146,8 @@ Ti invierò il modello 3D appena pronto.`
             console.log(err);
         });
         
-        ctx.session.processing = true;
+        ctx.session.processing = false;
+        ctx.session.id = "";
     });
 
     // bot.command('config', async (ctx) => {

@@ -5,8 +5,11 @@ export const useDb = async () => {
         connectionString: process.env.PG_CONNECTION_STRING,
         keepAlive: true
     })
-
-    await client.connect()
+    try {
+        await client.connect()
+    } catch (error) {
+        process.exit(1)
+    }
     
     client.on('error', (err) => {
         console.error('Database error', err)
