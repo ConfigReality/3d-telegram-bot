@@ -9,6 +9,8 @@ import { IContext } from "./context";
 import { join } from 'path';
 import { Client } from "pg";
 
+const PERSISTENCE = false;
+
 export const useOn = (bot: Telegraf<IContext>, db: Client) => {
     bot.hears('hi', (ctx) => {
         const user = ctx.from;
@@ -23,56 +25,59 @@ export const useOn = (bot: Telegraf<IContext>, db: Client) => {
         
         // DB PERSISTENCE - Start
         try {
-            const dbRes = await db.query(`SELECT * FROM images WHERE model_id = $1`, [sessionId])
+            const dbRes = await db.query(`SELECT * FROM models WHERE model_id = $1`, [sessionId])
             if (dbRes.rows.length > 0) {
-                db.query(`UPDATE images SET imgs = array_append(imgs, $1) WHERE model_id = $2`, [link.toString(), sessionId]);
+                db.query(`UPDATE models SET imgs = array_append(imgs, $1) WHERE model_id = $2`, [link.toString(), sessionId]);
                 console.log('Updated')
-    
                 return;
-            }
-            await db.query(`INSERT INTO images (model_id, imgs) VALUES ($1, $2)`, [sessionId, `{'${link.toString()}'}`]);
-            console.log('Inserted')
+            } 
+
+            // await db.query(`INSERT INTO images (model_id, imgs) VALUES ($1, $2)`, [sessionId, `{'${link.toString()}'}`]);
+            // console.log('Inserted')
+            
             // DB PERSISTENCE - End
         } catch (error) {
             console.log('Error', error)
         }
 
-
+        if(PERSISTENCE) return;
         const res = await fetch(link.toString());
         await res.body?.pipeTo(Writable.toWeb(createWriteStream(toPath)));
+        console.log("Downloaded", link.toString());
     };
 
     bot.on(message("photo"), async ctx => {
         if (ctx.session.id === '') {
             ctx.reply('Inizia un nuovo processo con /init');
             return
+        } else if(ctx.session.processing) {
+            ctx.reply(`Processo ${ctx.session.id} già in corso.`);
         }
+        
         const { file_id } = ctx.message.photo.pop() as PhotoSize;
 
         const id = ctx.session.id;
         ctx.session.lastIteraction = new Date().toISOString();
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_id}.jpg`);
-        try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
-        await download(file_id, _path, id)
-
-        console.log("Downloaded", _path);
+        if(PERSISTENCE) try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
+        await download(file_id, _path, id);
     });
 
     bot.on(message("document"), async ctx => {
         if (ctx.session.id === '') {
             ctx.reply('Inizia un nuovo processo con /init');
             return
+        } else if(ctx.session.processing) {
+            ctx.reply(`Processo ${ctx.session.id} già in corso.`);
         }
         const { file_id, file_name } = ctx.message.document;
         ctx.session.lastIteraction = new Date().toISOString();
         const id = ctx.session.id;
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_name}`);
-        try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
+        if(PERSISTENCE) try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
         await download(file_id, _path, id);
-
-        console.log("Downloaded", _path);
     });
 
 }

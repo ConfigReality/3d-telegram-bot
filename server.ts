@@ -4,10 +4,11 @@ import { useCommand } from './src/command';
 import { useOn } from './src/on';
 import { IContext } from './src/context';
 import { useProcessing } from './src/lib/process';
-import { useActions } from './src/actions';
-import { useWizard } from './src/wizard';
+// import { useActions } from './src/actions';
+// import { useWizard } from './src/wizard';
 import { useConfig } from './src/config';
 import { useDb } from './src/lib/db';
+import { useQueue } from './src/lib/queue';
 
 require('dotenv').config();
 
@@ -25,11 +26,11 @@ bot.use(session({
 		processing: false,
 		lastIteraction: newDateString,
 		processConfig: {
-			detail: "",
+			detail: "default",
 			detailMessage: 0,
-			order: "",
+			order: "default",
 			orderMessage: 0,
-			feature: "",
+			feature: "default",
 			featureMessage: 0,
 			completeMessage: 0,
 			abortedMessage: 0,
@@ -43,24 +44,31 @@ const init = async () => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const db = await useDb();
+			const queue = useQueue();
 			useCommand(bot, db);
 			useOn(bot, db);
 			// processing
-			useProcessing(bot, db);
+			useProcessing(bot, db, queue);
 			// config
 			// useWizard(bot);
 			useConfig(bot);
 
 			bot.launch().then(console.log).catch(console.error);
 
-			process.once('SIGINT', () => {
+			process.once('SIGINT', async () => {
+				console.log(('SIGINT'));
 				bot.stop('SIGINT');
-				db.end();
+				await db.end();
+				queue?.destroy();
+				process.exit(1)
 			});
 
-			process.once('SIGTERM', () => {
+			process.once('SIGTERM', async () => {
+				console.log(('SIGTERM'));
 				bot.stop('SIGTERM');
-				db.end();
+				await db.end();
+				queue?.destroy();
+				process.exit(1)
 			});
 			resolve('Bot started');
 

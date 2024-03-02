@@ -1,11 +1,11 @@
 import { Context, Scenes } from "telegraf";
-import { I18nProp } from "./i18n";
-import { SessionContext } from "telegraf/typings/session";
-import { SceneContextScene, WizardSession, WizardSessionData } from "telegraf/typings/scenes";
+// import { I18nProp } from "./i18n";
+// import { SessionContext } from "telegraf/typings/session";
+// import { SceneContextScene, WizardSession, WizardSessionData } from "telegraf/typings/scenes";
 
-type DetailType = "preview" | "reduced" | "medium" | "full" | "raw";
-type OrderType = "unordered" | "sequential";
-type FeatureType = "normal" | "high";
+// type DetailType = "preview" | "reduced" | "medium" | "full" | "raw";
+// type OrderType = "unordered" | "sequential";
+// type FeatureType = "normal" | "high";
 
 /**
  * It is possible to extend the session object that is available to each wizard.
@@ -49,7 +49,7 @@ interface SessionData extends Scenes.WizardSession {
 export interface IContext extends Context {
 	session: SessionData;
 	// will be available under `ctx.id`
-	i18n: I18nProp;
+	// i18n: I18nProp;
 	// declare scene type
 	scene: Scenes.SceneContextScene<IContext, Scenes.WizardSessionData>;
 	// declare wizard type

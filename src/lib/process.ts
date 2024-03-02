@@ -1,66 +1,68 @@
 import { Telegraf } from "telegraf";
 import { IContext } from "../context";
-import { ChildProcess, ExecException, exec } from "child_process";
-import { join } from 'path'
-import fastq from "fastq";
+// import { ChildProcess, ExecException, exec } from "child_process";
+// import { join } from 'path'
+// import fastq from "fastq";
 
 import { v4 as uuidv4 } from "uuid";
-import { existsSync } from "fs";
+// import { existsSync } from "fs";
 import { Client } from "pg";
+import { AMQPClient } from "amqp";
 
-const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
-const outDir = `${dir}/photos`
-const libDir = `${dir}/src/lib`
+// const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
+// const outDir = `${dir}/photos`
+// const libDir = `${dir}/src/lib`
 
 
 // const INACTICITY_TIMEOUT = 10 * 1000;
 
-function promiseFromChildProcess(child: ChildProcess) {
-    return new Promise(function (resolve, reject) {
-        child.addListener("error", reject);
-        child.addListener("exit", resolve);
-    });
-}
+// function promiseFromChildProcess(child: ChildProcess) {
+//     return new Promise(function (resolve, reject) {
+//         child.addListener("error", reject);
+//         child.addListener("exit", resolve);
+//     });
+// }
 
-const queue = fastq.promise(async (ctx: IContext) => {
-    // await new Promise((resolve) => setTimeout(resolve, 10000));
-    const id = ctx.session.id;
-    const source = `${outDir}/${id}/${id}.usdz`;
-    await promiseFromChildProcess(exec(
-        `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/ ${source}`,
-        (error: ExecException | null, stdout: string, stderr: string) => {
-            if (error) {
-                ctx.reply(`Errore durante l'elaborazione del modello. ${error.message}`)
-                return;
-            }
+// const queue = fastq.promise(async (ctx: IContext) => {
+//     // await new Promise((resolve) => setTimeout(resolve, 10000));
+//     const id = ctx.session.id;
+//     const source = `${outDir}/${id}/${id}.usdz`;
+//     await promiseFromChildProcess(exec(
+//         `cd ${libDir} && ./HelloPhotogrammetry ${outDir}/${id}/ ${source}`,
+//         (error: ExecException | null, stdout: string, stderr: string) => {
+//             if (error) {
+//                 ctx.reply(`Errore durante l'elaborazione del modello. ${error.message}`)
+//                 return;
+//             }
             
-            console.log(`stdout: ${stdout}`);
-            console.error(`stderr: ${stderr}`);
-        }
-    ));
-    ctx.reply(
-`Modello pronto! 
-${ctx.session.id}`
-    );
-    // check if file exists
-    if(!existsSync(source)) {
-        ctx.reply(`Errore durante l'elaborazione del modello. File non trovato.`);
-        return;
-    }
-    ctx.sendDocument({source});
-    ctx.session.id = "";
-    ctx.session.processing = false;
-}, 1);
+//             console.log(`stdout: ${stdout}`);
+//             console.error(`stderr: ${stderr}`);
+//         }
+//     ));
+//     ctx.reply(
+// `Modello pronto! 
+// ${ctx.session.id}`
+//     );
+//     // check if file exists
+//     if(!existsSync(source)) {
+//         ctx.reply(`Errore durante l'elaborazione del modello. File non trovato.`);
+//         return;
+//     }
+//     ctx.sendDocument({source});
+//     ctx.session.id = "";
+//     ctx.session.processing = false;
+// }, 1);
 
-export const useProcessing = (bot: Telegraf<IContext>, db: Client) => {
+export const useProcessing = (bot: Telegraf<IContext>, db: Client, queue: AMQPClient | null) => {
     const _exit = (id: string) => `Processo ${id} già in corso.
 Premere /cancel per annullare il processo.`
 
     bot.command("list", async (ctx) => {
-        const resume = queue.resume()
-        const length = queue.length()
-        console.log(resume, length)
-        await ctx.reply(JSON.stringify({ resume, length }, null, 2));
+        // // const resume = queue.resume()
+        // // const length = queue.length()
+        // console.log(resume, length)
+        // await ctx.reply(JSON.stringify({ resume, length }, null, 2));
+        await ctx.reply('In lavorazione');
     });
 
     bot.command("init", async (ctx) => {
@@ -118,7 +120,32 @@ Attendi qualche minuto.
 Ti invierò il modello 3D appena pronto.`
         );
 
-        queue.push(ctx);
+
+        const insertProcessing = 
+            await db.query(`INSERT INTO processing (
+                model_id,
+                model_detail, 
+                model_order, 
+                model_feature, 
+                status
+            ) VALUES ($1, $2, $3, $4, $5) 
+            RETURNING ID`, 
+            [
+                ctx.session.id, 
+                ctx.session.processConfig.detail, 
+                ctx.session.processConfig.order, 
+                ctx.session.processConfig.feature, 
+                'queued'
+            ]);
+        if(insertProcessing.rowCount === 0) {
+            await ctx.reply('Errore durante l\'inserimento del processo');
+        }
+        // queue.push(ctx);
+        queue?.publish('processing', insertProcessing.rows[0].id, { contentType: 'text/plain' }, (err) => {
+            console.log(err);
+        });
+        
+        ctx.session.processing = true;
     });
 
     // bot.command('config', async (ctx) => {
@@ -145,6 +172,6 @@ Esempio: /reprocessing 123e4567-e89b-12d3-a456-426614174000`
         ctx.session.id = id;
         ctx.session.processing = false;
         await ctx.reply(`Riprovo il processo ${id}`);
-        queue.push(ctx);
+        // queue.push(ctx);
     });
 };
