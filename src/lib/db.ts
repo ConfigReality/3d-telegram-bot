@@ -36,7 +36,7 @@ export const useDb = async () => {
     `)
 
     // create models table
-    await client.query('DROP TABLE IF EXISTS models CASCADE;');
+    // await client.query('DROP TABLE IF EXISTS models CASCADE;');
     await client.query(`
         CREATE TABLE IF NOT EXISTS models (
             model_id VARCHAR(36) NOT NULL PRIMARY KEY,
@@ -60,7 +60,7 @@ export const useDb = async () => {
     // `)
 
     // create processing table
-    await client.query('DROP TABLE IF EXISTS processing CASCADE;');
+    // await client.query('DROP TABLE IF EXISTS processing CASCADE;');
     await client.query(`
         CREATE TABLE IF NOT EXISTS processing (
             id SERIAL PRIMARY KEY,

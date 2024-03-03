@@ -173,7 +173,19 @@ Esempio: /reprocessing 123e4567-e89b-12d3-a456-426614174000`
         }
         
         await ctx.reply(`Riprovo il processo ${id}`);
-        queue?.publish('processing', id, { contentType: 'text/plain' }, (err) => {
+
+        // retrieve process id
+        const process = await db.query(`SELECT * FROM processing WHERE model_id = $1;`, [id]);
+        if(process.rowCount === 0) {
+            await ctx.reply(`Processo non trovato`);
+            return
+        }
+        const { id: processId, model_id, model_detail, model_order, model_feature } = process.rows[0];
+        // update process status
+        await db.query(`UPDATE processing SET status = 'queued' WHERE id = $1`, [processId]);
+        // queue.push(ctx);
+
+        queue?.publish('processing', processId, { contentType: 'text/plain' }, (err) => {
             console.log(err);
         });
 
