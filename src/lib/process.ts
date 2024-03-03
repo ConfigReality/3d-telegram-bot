@@ -109,10 +109,10 @@ Premi /cancel per annullare il processo.`
             await ctx.reply(`Per iniziare un nuovo processo, invia /init.`);
             return
         }
-        if (ctx.session.processing) {
-            await ctx.reply(_exit(ctx.session.id));
-            return
-        }
+        // if (ctx.session.processing) {
+        //     await ctx.reply(_exit(ctx.session.id));
+        //     return
+        // }
 
         await ctx.reply(
 `

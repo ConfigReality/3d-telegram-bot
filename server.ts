@@ -60,7 +60,9 @@ const init = async () => {
 				bot.stop('SIGINT');
 				await db.end();
 				queue?.destroy();
-				process.exit(1)
+				setTimeout(() => {
+					process.exit(1)
+				}, 500);
 			});
 
 			process.once('SIGTERM', async () => {
@@ -68,7 +70,9 @@ const init = async () => {
 				bot.stop('SIGTERM');
 				await db.end();
 				queue?.destroy();
-				process.exit(1)
+				setTimeout(() => {
+					process.exit(1)
+				}, 500);
 			});
 			resolve('Bot started');
 

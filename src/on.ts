@@ -50,9 +50,10 @@ export const useOn = (bot: Telegraf<IContext>, db: Client) => {
         if (ctx.session.id === '') {
             ctx.reply('Inizia un nuovo processo con /init');
             return
-        } else if(ctx.session.processing) {
-            ctx.reply(`Processo ${ctx.session.id} già in corso.`);
-        }
+        } 
+        // else if(ctx.session.processing) {
+        //     ctx.reply(`Processo ${ctx.session.id} già in corso.`);
+        // }
         
         const { file_id } = ctx.message.photo.pop() as PhotoSize;
 
@@ -68,9 +69,10 @@ export const useOn = (bot: Telegraf<IContext>, db: Client) => {
         if (ctx.session.id === '') {
             ctx.reply('Inizia un nuovo processo con /init');
             return
-        } else if(ctx.session.processing) {
-            ctx.reply(`Processo ${ctx.session.id} già in corso.`);
-        }
+        } 
+        // else if(ctx.session.processing) {
+        //     ctx.reply(`Processo ${ctx.session.id} già in corso.`);
+        // }
         const { file_id, file_name } = ctx.message.document;
         ctx.session.lastIteraction = new Date().toISOString();
         const id = ctx.session.id;

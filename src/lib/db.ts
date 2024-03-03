@@ -8,13 +8,16 @@ export const useDb = async () => {
     try {
         await client.connect()
     } catch (error) {
-        process.exit(1)
+        setTimeout(() => {
+            process.exit(1)
+        }, 500);
     }
-    
+
     client.on('error', (err) => {
         console.error('Database error', err)
-        // interrupt the process
-        process.exit(1)
+        setTimeout(() => {
+            process.exit(1)
+        }, 500);
     })
 
     console.log('Database connected')
