@@ -1,19 +1,28 @@
-FROM node:20-alpine
+FROM node:20 as builder
 
-# Create app directory
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
 COPY package*.json ./
 
-RUN npm install
+# Install any needed packages specified in package.json
+RUN npm ci
 
-# Build app
+RUN npm install -g typescript
 
+# Copy the source code
 COPY . .
 
+# Run the build
 RUN npm run build
 
-# Exec app
+FROM node:20-slim
+ENV NODE_ENV production
+USER node
+WORKDIR /home/node/app
 
-CMD [ "npm", "start" ]
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+CMD ["node", "dist/server.js"]
