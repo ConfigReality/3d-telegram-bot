@@ -171,9 +171,14 @@ Esempio: /reprocessing 123e4567-e89b-12d3-a456-426614174000`
             );
             return
         }
-        ctx.session.id = id;
-        ctx.session.processing = false;
+        
         await ctx.reply(`Riprovo il processo ${id}`);
+        queue?.publish('processing', id, { contentType: 'text/plain' }, (err) => {
+            console.log(err);
+        });
+
+        ctx.session.processing = false;
+        ctx.session.id = "";
         // queue.push(ctx);
     });
 };
