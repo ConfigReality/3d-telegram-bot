@@ -1,19 +1,19 @@
-FROM node:20-alpine as base
+FROM node
 
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-COPY package.json /app
+# Install app dependencies
+COPY package*.json ./
 
-RUN npm i
+RUN npm install
+
+# Build app
 
 COPY . .
 
-FROM base as production
-
-ENV NODE_PATH=./dist
-
 RUN npm run build
 
-COPY .env /app
+# Exec app
 
-COPY dist /app/dist
+CMD [ "npm", "start" ]
