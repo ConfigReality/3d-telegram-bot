@@ -22,7 +22,5 @@ USER node
 WORKDIR /home/node/app
 
 COPY --from=builder /usr/src/app/package.json ./
-COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/dist ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
-
-CMD ["node", "dist/server.js"]
