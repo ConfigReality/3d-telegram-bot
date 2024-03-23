@@ -7,11 +7,12 @@ import { PhotoSize, Update } from "telegraf/typings/core/types/typegram";
 import { mkdir } from "fs/promises";
 import { IContext } from "./context";
 import { join } from 'path';
-import { Client } from "pg";
+import { supabase } from "./lib/supabase";
+import { Json } from "./types/supabase";
 
 const PERSISTENCE = false;
 
-export const useOn = (bot: Telegraf<IContext>, db: Client) => {
+export const useOn = (bot: Telegraf<IContext>) => {
     bot.hears('hi', (ctx) => {
         const user = ctx.from;
         ctx.reply(`Hello ${user.first_name}!`);
@@ -25,22 +26,28 @@ export const useOn = (bot: Telegraf<IContext>, db: Client) => {
         
         // DB PERSISTENCE - Start
         try {
-            const dbRes = await db.query(`SELECT * FROM models WHERE model_id = $1`, [sessionId])
-            if (dbRes.rows.length > 0) {
-                db.query(`UPDATE models SET imgs = array_append(imgs, $1) WHERE model_id = $2`, [link.toString(), sessionId]);
+            const { data, error } = await supabase.from('Project').select('files')
+                .eq('user_id', sessionId)
+                .single()
+            if (error) {
+                console.log('Error', error)
+                return;
+            }
+            if (data) {
+                const files = data.files as Json[] || [];
+                files.push({link: link.toString()});
+                console.log('Files', files)
+                await supabase.from('Project')
+                    .update({ files })
+                    .eq('user_id', sessionId);
                 console.log('Updated')
                 return;
-            } 
-
-            // await db.query(`INSERT INTO images (model_id, imgs) VALUES ($1, $2)`, [sessionId, `{'${link.toString()}'}`]);
-            // console.log('Inserted')
-            
-            // DB PERSISTENCE - End
+            }
         } catch (error) {
             console.log('Error', error)
         }
 
-        if(PERSISTENCE) return;
+        if(!PERSISTENCE) return;
         const res = await fetch(link.toString());
         await res.body?.pipeTo(Writable.toWeb(createWriteStream(toPath)));
         console.log("Downloaded", link.toString());

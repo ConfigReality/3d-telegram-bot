@@ -14,7 +14,7 @@ Feature:\n\t\t\t\t<i>${ctx.session.processConfig.feature || 'default'}</i>
 
     const _setDefaultConfig = (ctx: IContext) => {
         ctx.session.processConfig = {
-            detail: "",
+            detail: "preview",
             detailMessage: 0,
             order: "",
             orderMessage: 0,

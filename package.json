@@ -9,12 +9,14 @@
     "build:watch": "tsc -w",
     "start": "node --watch dist/server.js",
     "dev": "node --watch --inspect dist/server.js",
+    "update-types": "node ./scripts/update-types.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
     "amqp": "^0.2.7",
     "dotenv": "^16.4.5",
     "fastq": "^1.17.1",

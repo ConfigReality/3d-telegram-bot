@@ -7,8 +7,6 @@ import { useProcessing } from './src/lib/process';
 // import { useActions } from './src/actions';
 // import { useWizard } from './src/wizard';
 import { useConfig } from './src/config';
-import { useDb } from './src/lib/db';
-import { useQueue } from './src/lib/queue';
 
 require('dotenv').config();
 
@@ -26,11 +24,11 @@ bot.use(session({
 		processing: false,
 		lastIteraction: newDateString,
 		processConfig: {
-			detail: "default",
+			detail: "preview",
 			detailMessage: 0,
-			order: "default",
+			order: "sequential",
 			orderMessage: 0,
-			feature: "default",
+			feature: "normal",
 			featureMessage: 0,
 			completeMessage: 0,
 			abortedMessage: 0,
@@ -43,14 +41,9 @@ bot.use(session({
 const init = async () => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const db = await useDb();
-			const queue = useQueue();
-			useCommand(bot, db);
-			useOn(bot, db);
-			// processing
-			useProcessing(bot, db, queue);
-			// config
-			// useWizard(bot);
+			useCommand(bot);
+			useOn(bot);
+			useProcessing(bot);
 			useConfig(bot);
 
 			bot.launch().then(console.log).catch(console.error);
@@ -58,18 +51,13 @@ const init = async () => {
 			process.once('SIGINT', async () => {
 				console.log(('SIGINT'));
 				bot.stop('SIGINT');
-				await db.end();
-				queue?.destroy();
 				setTimeout(() => {
 					process.exit(1)
 				}, 500);
 			});
-
 			process.once('SIGTERM', async () => {
 				console.log(('SIGTERM'));
 				bot.stop('SIGTERM');
-				await db.end();
-				queue?.destroy();
 				setTimeout(() => {
 					process.exit(1)
 				}, 500);

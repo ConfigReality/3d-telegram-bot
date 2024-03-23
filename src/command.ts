@@ -1,26 +1,31 @@
 import { Markup, Telegraf } from "telegraf";
 
 import { IContext } from "./context";
-import { Client } from "pg";
+import { supabase } from "./lib/supabase";
 
-export const useCommand = (bot: Telegraf<IContext>, db: Client) => {
+export const useCommand = (bot: Telegraf<IContext>) => {
     bot.start((ctx) => {
         ctx.reply('Benvenuto! ' + ctx.from.first_name);
-        db.query('SELECT * FROM telegram_users WHERE user_id = $1', [ctx.from.id], (err, res) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            if (res.rows.length === 0) {
-                db.query('INSERT INTO telegram_users (user_id, first_name, username, language_code, type) VALUES ($1, $2, $3, $4, $5)', [ctx.from.id, ctx.from.first_name, ctx.from.username, ctx.from.language_code, ctx.chat.type], (err, res) => {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-                    console.log('User added');
-                })
-            }
-        })
+        // insert user in db if not exists
+        
+        supabase.from('telegram_user')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', ctx.from.id)
+            .then(({count, error}) => {
+                if(error) return console.log(error)
+                if(count === 0){
+                    supabase.from('telegram_user')
+                        .insert({
+                            user_id: ctx.from.id,
+                            first_name: ctx.from.first_name,
+                            username: ctx.from.username,
+                            language_code: ctx.from.language_code,
+                            type: ctx.chat.type
+                        }).then(({data, error}) => {
+                            console.log({data, error})
+                        })
+                }
+            })
     });
     
     bot.help((ctx) => ctx.reply('Try /wizard to create a 3d wizard'));

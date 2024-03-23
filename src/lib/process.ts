@@ -8,6 +8,9 @@ import { v4 as uuidv4 } from "uuid";
 // import { existsSync } from "fs";
 import { Client } from "pg";
 import { AMQPClient } from "amqp";
+import { supabase } from "./supabase";
+import { Database } from "../types/supabase";
+import { connection } from "./queue";
 
 // const dir = join(__dirname.substring(0, __dirname.lastIndexOf('/')), '..', '..')
 // const outDir = `${dir}/photos`
@@ -53,7 +56,7 @@ import { AMQPClient } from "amqp";
 //     ctx.session.processing = false;
 // }, 1);
 
-export const useProcessing = (bot: Telegraf<IContext>, db: Client, queue: AMQPClient | null) => {
+export const useProcessing = (bot: Telegraf<IContext>) => {
     const _exit = (id: string) => `Processo ${id} già in corso.
 Premere /cancel per annullare il processo.`
 
@@ -87,8 +90,12 @@ Premi /cancel per annullare il processo.`
         ctx.session.id = uuidv4();
         ctx.session.processing = true;
 
-        const insertModel = await db.query('INSERT INTO models (model_id, user_id) VALUES ($1, $2)', [ctx.session.id, ctx.from.id]);
-        if(insertModel.rowCount === 0) {
+        const {error} = await supabase.from('Project').insert({
+            user_id: ctx.session.id,
+            status: 'draft'
+        });
+
+        if(error) {
             await ctx.reply('Errore durante l\'inserimento del modello');
         }
         await ctx.reply(`Incolla le foto da processare.`);
@@ -120,29 +127,34 @@ Premi /cancel per annullare il processo.`
 Attendi qualche minuto. 
 Ti invierò il modello 3D appena pronto.`
         );
+        const {data: d, error: e} = await supabase.from('Project')
+            .select('id')
+            .eq('user_id', ctx.session.id).single();
+        if(e || !d.id) {
+            return await ctx.reply('Errore durante l\'inserimento del processo');
+        }
+        console.log({
+            detail: ctx.session.processConfig.detail as Database['public']['Enums']['details'],
+            order: ctx.session.processConfig.order as Database['public']['Enums']['orders'], 
+            feature: ctx.session.processConfig.feature as Database['public']['Enums']['features'],
+        })
 
+        const {error, data} = await supabase.from('Process').insert({
+            detail: ctx.session.processConfig.detail as Database['public']['Enums']['details'],
+            order: ctx.session.processConfig.order as Database['public']['Enums']['orders'], 
+            feature: ctx.session.processConfig.feature as Database['public']['Enums']['features'],
+            project_id: d.id,
+            status: 'open'
+        }).select('id').single();
+        
+        console.log({error, data})
 
-        const insertProcessing = 
-            await db.query(`INSERT INTO processing (
-                model_id,
-                model_detail, 
-                model_order, 
-                model_feature, 
-                status
-            ) VALUES ($1, $2, $3, $4, $5) 
-            RETURNING ID`, 
-            [
-                ctx.session.id, 
-                ctx.session.processConfig.detail, 
-                ctx.session.processConfig.order, 
-                ctx.session.processConfig.feature, 
-                'queued'
-            ]);
-        if(insertProcessing.rowCount === 0) {
+        
+        if(error || !data.id) {
             await ctx.reply('Errore durante l\'inserimento del processo');
         }
         // queue.push(ctx);
-        queue?.publish('processing', insertProcessing.rows[0].id, { contentType: 'text/plain' }, (err) => {
+        connection?.publish('processing', data?.id, { contentType: 'text/plain' }, (err) => {
             console.log(err);
         });
         
@@ -175,19 +187,19 @@ Esempio: /reprocessing 123e4567-e89b-12d3-a456-426614174000`
         await ctx.reply(`Riprovo il processo ${id}`);
 
         // retrieve process id
-        const process = await db.query(`SELECT * FROM processing WHERE model_id = $1;`, [id]);
-        if(process.rowCount === 0) {
-            await ctx.reply(`Processo non trovato`);
-            return
-        }
-        const { id: processId, model_id, model_detail, model_order, model_feature } = process.rows[0];
-        // update process status
-        await db.query(`UPDATE processing SET status = 'queued' WHERE id = $1`, [processId]);
-        // queue.push(ctx);
+        // const process = await db.query(`SELECT * FROM processing WHERE model_id = $1;`, [id]);
+        // if(process.rowCount === 0) {
+        //     await ctx.reply(`Processo non trovato`);
+        //     return
+        // }
+        // const { id: processId, model_id, model_detail, model_order, model_feature } = process.rows[0];
+        // // update process status
+        // await db.query(`UPDATE processing SET status = 'queued' WHERE id = $1`, [processId]);
+        // // queue.push(ctx);
 
-        queue?.publish('processing', processId, { contentType: 'text/plain' }, (err) => {
-            console.log(err);
-        });
+        // queue?.publish('processing', processId, { contentType: 'text/plain' }, (err) => {
+        //     console.log(err);
+        // });
 
         ctx.session.processing = false;
         ctx.session.id = "";

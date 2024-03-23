@@ -28,8 +28,11 @@ Welcome message
 
 `/project`
 
-- Project Name
-- Upload foto and processing
+```
+init - Per iniziare un progetto 3D
+config - Impostare le configurazioni del processamento
+processing - Processare il progetto
+```
 
 ## Message
 
