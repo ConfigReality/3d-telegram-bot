@@ -8,7 +8,6 @@ import { mkdir } from "fs/promises";
 import { IContext } from "./context";
 import { join } from 'path';
 import { supabase } from "./lib/supabase";
-import { Json } from "./types/supabase";
 
 const PERSISTENCE = false;
 
@@ -26,23 +25,20 @@ export const useOn = (bot: Telegraf<IContext>) => {
         
         // DB PERSISTENCE - Start
         try {
-            const { data, error } = await supabase.from('Project').select('files')
+            const { data, error } = await supabase.from('Project').select('id, files')
                 .eq('user_id', sessionId)
+                .order('created_at', {ascending: false})
                 .single()
-            if (error) {
-                console.log('Error', error)
-                return;
-            }
-            if (data) {
-                const files = data.files as Json[] || [];
-                files.push({link: link.toString()});
-                console.log('Files', files)
-                await supabase.from('Project')
-                    .update({ files })
-                    .eq('user_id', sessionId);
-                console.log('Updated')
-                return;
-            }
+
+            if (error) { console.error('Error', error); return; }
+
+            const {error: e} = await supabase.rpc('append_array', {
+                id: data?.id,
+                new_element: link.toString()
+            });
+
+            if (e) { console.error('Error', e); return; }
+
         } catch (error) {
             console.log('Error', error)
         }

@@ -1,6 +1,4 @@
 import amqp from 'amqp'
-
-
 require('dotenv').config();
 
 export const connection = amqp.createConnection({

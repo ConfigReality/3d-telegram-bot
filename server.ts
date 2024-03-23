@@ -3,7 +3,7 @@ import { mkdir } from 'fs/promises';
 import { useCommand } from './src/command';
 import { useOn } from './src/on';
 import { IContext } from './src/context';
-import { useProcessing } from './src/lib/process';
+import { useProcessing } from './src/process';
 // import { useActions } from './src/actions';
 // import { useWizard } from './src/wizard';
 import { useConfig } from './src/config';

@@ -36,41 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      Model: {
-        Row: {
-          created_at: string
-          file_name: string | null
-          id: number
-          mime_type: string | null
-          projects_id: number | null
-          size: number | null
-        }
-        Insert: {
-          created_at?: string
-          file_name?: string | null
-          id?: number
-          mime_type?: string | null
-          projects_id?: number | null
-          size?: number | null
-        }
-        Update: {
-          created_at?: string
-          file_name?: string | null
-          id?: number
-          mime_type?: string | null
-          projects_id?: number | null
-          size?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_Model_projects_id_fkey"
-            columns: ["projects_id"]
-            isOneToOne: false
-            referencedRelation: "Project"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       Process: {
         Row: {
           created_at: string
@@ -124,11 +89,10 @@ export type Database = {
           created_at: string
           description: string | null
           file_location: string | null
-          files: Json | null
+          files: string[] | null
           id: number
           name: string | null
           status: string | null
-          telegram_uuid: string | null
           user_id: string | null
         }
         Insert: {
@@ -136,11 +100,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_location?: string | null
-          files?: Json | null
+          files?: string[] | null
           id?: number
           name?: string | null
           status?: string | null
-          telegram_uuid?: string | null
           user_id?: string | null
         }
         Update: {
@@ -148,11 +111,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_location?: string | null
-          files?: Json | null
+          files?: string[] | null
           id?: number
           name?: string | null
           status?: string | null
-          telegram_uuid?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -245,7 +207,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      append_array: {
+        Args: {
+          new_element: string
+          id: number
+        }
+        Returns: undefined
+      }
+      remove_array: {
+        Args: {
+          new_element: string
+          id: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       details: "preview" | "reduced" | "medium" | "full" | "raw"
