@@ -36,6 +36,8 @@ interface SessionData extends Scenes.WizardSession {
 	// will be available under `ctx.session.userId`
 	// userId: number;
 	id: string;
+	user_id: number;
+	project_id: number;
 	processing: boolean;
 	processConfig: ProcessConfigProps;
 	lastIteraction: string;
@@ -47,6 +49,7 @@ interface SessionData extends Scenes.WizardSession {
 // }
 
 export interface IContext extends Context {
+	// will be available under `ctx.session`
 	session: SessionData;
 	// will be available under `ctx.id`
 	// i18n: I18nProp;

@@ -1,0 +1,19 @@
+create or replace function append_array(new_element text, id int8)
+returns void
+as
+$func$
+    update "Project"
+    set files = array_append(files, $1)
+    where id = $2
+$func$
+language sql;
+
+create or replace function remove_array(new_element text, id int8)
+returns void
+as
+$func$
+    update "Project"
+    set files = array_remove(files, $1)
+    where id = $2
+$func$
+language sql;

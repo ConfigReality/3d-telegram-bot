@@ -19,14 +19,14 @@ export const useOn = (bot: Telegraf<IContext>) => {
 
     bot.on(message('sticker'), (ctx) => ctx.reply('🖕'));
 
-    const download = async (fromFileId: string, toPath: string, sessionId: string) => {
+    const download = async (fromFileId: string, toPath: string, project_id: number) => {
         const link = await bot.telegram.getFileLink(fromFileId);
-        console.log('[download]', link.toString());
+        // console.log('[download]', link.toString());
         
         // DB PERSISTENCE - Start
         try {
             const { data, error } = await supabase.from('Project').select('id, files')
-                .eq('user_id', sessionId)
+            .eq('id', project_id)
                 .order('created_at', {ascending: false})
                 .single()
 
@@ -65,7 +65,7 @@ export const useOn = (bot: Telegraf<IContext>) => {
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_id}.jpg`);
         if(PERSISTENCE) try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
-        await download(file_id, _path, id);
+        await download(file_id, _path, ctx.session.project_id);
     });
 
     bot.on(message("document"), async ctx => {
@@ -82,7 +82,7 @@ export const useOn = (bot: Telegraf<IContext>) => {
         const dirPath = `./photos/${id}`;
         const _path = join(dirPath, `${file_name}`);
         if(PERSISTENCE) try { await mkdir(dirPath, { recursive: true }); } catch (e) { console.error(e) }
-        await download(file_id, _path, id);
+        await download(file_id, _path, ctx.session.project_id);
     });
 
 }

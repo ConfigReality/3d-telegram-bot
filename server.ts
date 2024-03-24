@@ -21,6 +21,8 @@ const newDateString = new Date().toISOString();
 bot.use(session({
 	defaultSession: () => ({
 		id: '',
+		user_id: 0,
+		project_id: 0,
 		processing: false,
 		lastIteraction: newDateString,
 		processConfig: {
